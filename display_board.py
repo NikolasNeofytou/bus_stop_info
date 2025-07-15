@@ -2,11 +2,14 @@ import os
 import time
 import requests
 from google.transit import gtfs_realtime_pb2
+from requests.exceptions import RequestException
+from google.protobuf import text_format
 
 API_URL = os.environ.get('API_URL', 'https://api.example.com/gtfs-rt/TripUpdates')
 API_KEY = os.environ.get('API_KEY')
 
 STOP_ID = os.environ.get('STOP_ID', '1234')
+LOCAL_FEED = os.environ.get('LOCAL_FEED', 'sample_trip_update.pb')
 
 HEADERS = {}
 if API_KEY:
@@ -14,14 +17,31 @@ if API_KEY:
 
 
 def fetch_feed():
-    resp = requests.get(API_URL, headers=HEADERS, timeout=10)
-    resp.raise_for_status()
+    """Fetch TripUpdates feed.
+
+    If the request fails, fall back to reading a local feed file defined by
+    ``LOCAL_FEED``.
+    """
     feed = gtfs_realtime_pb2.FeedMessage()
-    feed.ParseFromString(resp.content)
+    try:
+        resp = requests.get(API_URL, headers=HEADERS, timeout=10)
+        resp.raise_for_status()
+        feed.ParseFromString(resp.content)
+    except RequestException as exc:
+        print(
+            f"Warning: failed to download feed ({exc}). Using local file '{LOCAL_FEED}'."
+        )
+        with open(LOCAL_FEED, "rb") as fh:
+            data = fh.read()
+            try:
+                feed.ParseFromString(data)
+            except Exception:
+                text_format.Parse(data.decode("utf-8"), feed)
     return feed
 
 
 def get_arrivals(feed, stop_id):
+    """Return a list of arrival times in seconds from now for ``stop_id``."""
     arrivals = []
     now = int(time.time())
     for entity in feed.entity:
@@ -35,6 +55,10 @@ def get_arrivals(feed, stop_id):
 
 
 def update_board(arrivals):
+    """Print arrival information.
+
+    Replace this function with code that updates your physical display.
+    """
     for i, seconds in enumerate(arrivals[:5], start=1):
         minutes = seconds // 60
         print(f"Bus {i} arriving in {minutes} min")
@@ -43,7 +67,10 @@ def update_board(arrivals):
 def main():
     feed = fetch_feed()
     arrivals = get_arrivals(feed, STOP_ID)
-    update_board(arrivals)
+    if arrivals:
+        update_board(arrivals)
+    else:
+        print("No upcoming arrivals found.")
 
 
 if __name__ == '__main__':
