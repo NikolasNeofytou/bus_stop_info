@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Bus Stop Board</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; }
+        h1 { margin-top: 40px; }
+        #arrivals { font-size: 2em; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Next Buses</h1>
+    <div id="arrivals">Loading...</div>
+    <script>
+        async function fetchArrivals() {
+            const resp = await fetch('/arrivals');
+            const data = await resp.json();
+            const arrivals = data.arrivals;
+            const div = document.getElementById('arrivals');
+            if (arrivals.length === 0) {
+                div.textContent = 'No upcoming arrivals';
+            } else {
+                div.innerHTML = arrivals.map(m => `Bus in ${m} min`).join('<br>');
+            }
+        }
+        fetchArrivals();
+        setInterval(fetchArrivals, 30000);
+    </script>
+</body>
+</html>
