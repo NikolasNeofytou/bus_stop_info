@@ -10,7 +10,7 @@ This repository provides a simple script to display live bus arrival times for a
 Install dependencies with:
 
 ```bash
-pip install requests gtfs-realtime-bindings
+pip install -r requirements.txt
 ```
 
 ## Usage
@@ -26,5 +26,7 @@ Run the script:
 python display_board.py
 ```
 
-The script prints the next few arrival times in minutes. Modify `update_board` in `display_board.py` to send the information to your hardware display.
+The script prints the next few arrival times in minutes. If the network request
+fails, it falls back to reading `sample_trip_update.pb`. Modify `update_board` in
+`display_board.py` to send the information to your hardware display.
 
