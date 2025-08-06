@@ -17,9 +17,11 @@ pip install -r requirements.txt
 ## Usage
 Set the following environment variables:
 
-- `API_URL` – URL to the GTFS-realtime TripUpdates feed provided by Cyprus Public Transport.
+- `API_URL` – URL to the GTFS-realtime TripUpdates feed provided by Cyprus Public Transport. If this is not set the script will read `sample_trip_update.pb` instead.
 - `API_KEY` – API key if required (optional).
 - `STOP_ID` – ID of the stop to monitor.
+
+You can usually obtain the real-time feed URL and an API key from Cyprus Public Transport's open data portal.
 
 Run the script:
 

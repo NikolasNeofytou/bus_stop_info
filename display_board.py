@@ -5,7 +5,7 @@ from google.transit import gtfs_realtime_pb2
 from requests.exceptions import RequestException
 from google.protobuf import text_format
 
-API_URL = os.environ.get('API_URL', 'https://api.example.com/gtfs-rt/TripUpdates')
+API_URL = os.environ.get('API_URL')
 API_KEY = os.environ.get('API_KEY')
 
 STOP_ID = os.environ.get('STOP_ID', '1234')
@@ -19,10 +19,20 @@ if API_KEY:
 def fetch_feed():
     """Fetch TripUpdates feed.
 
-    If the request fails, fall back to reading a local feed file defined by
-    ``LOCAL_FEED``.
+    Falls back to reading ``LOCAL_FEED`` if ``API_URL`` is not set or the
+    download fails.
     """
     feed = gtfs_realtime_pb2.FeedMessage()
+    if not API_URL:
+        print(f"API_URL not set. Using local file '{LOCAL_FEED}'.")
+        with open(LOCAL_FEED, "rb") as fh:
+            data = fh.read()
+            try:
+                feed.ParseFromString(data)
+            except Exception:
+                text_format.Parse(data.decode("utf-8"), feed)
+        return feed
+
     try:
         resp = requests.get(API_URL, headers=HEADERS, timeout=10)
         resp.raise_for_status()
